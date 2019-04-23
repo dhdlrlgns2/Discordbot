@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os
 import asyncio
 import discord
 from urllib.request import urlopen
@@ -23,10 +23,14 @@ async def on_ready():
 #봇 작동 구역
 @app.event
 async def on_message(message):
+
+    #채널 목록 얻어오기
     lt = list()
     for chain in app.get_all_channels():
             lt.append(chain)
-            
+    #돌림판 초기 설정
+    default_list = ['알파','하틴','루인스','탐방','나캄','샤미','찰리','파이남','부캠','브라보','캄퐁','독스','라카위','몽나이','카오','하늘정원']
+    tmp_list = default_list        
             
     if message.author.bot:
         return None #봇 메세지 무시
@@ -69,22 +73,87 @@ async def on_message(message):
         n = int(message.content.split()[1])
         mslt = list()
         for ms in message.author.voice_channel.voice_members:
-            mslt.append(ms.mention)
+            mslt.append(str(ms.nick))
         tmp = list()
+        num = 1
         while mslt:
             if len(mslt)<n:
-                await app.send_message(message.channel,mslt)
+                await app.send_message(message.channel,str(num)+"팀 "+str(mslt))
+                await app.send_message(message.channel,"===========================================")
                 break;
             else:        
                 while len(tmp) != n:
                     lg = len(mslt)
                     tmp.append(mslt.pop(rd.randint(0,lg-1)))
-                await app.send_message(message.channel,tmp)
+                await app.send_message(message.channel,str(num)+"팀 "+str(tmp))
+                await app.send_message(message.channel,"===========================================")
                 tmp = []
-    if message.content.startswith("!테스트"):
-        
-        await app.send_message(message.channel,(message.author.voice_channel))
-        
+            num +=1
+    if message.content == ("!돌림판"):
+        f = open("test.txt",'r')
+        tmp_list = f.read().split()
+        f.close()   
+        await app.send_message(message.channel,tmp_list[rd.randint(0,len(tmp_list)-1)])
+
+    else:
+        if message.content.startswith("!돌림판"):
+            command = message.content.split()[1]
+
+            if command == '초기화':
+                f = open("test.txt",'w')
+                for word in default_list:
+                    f.write(word)
+                    f.write(" ")
+                f.close()
+                await app.send_message(message.channel,"초기화 완료")
+            
+            elif command == '목록':
+                f = open("test.txt",'r')
+                tmp_list = f.read().split()
+                f.close()
+                await app.send_message(message.channel,tmp_list)
+            elif command == ('추가'):
+                words = message.content.split()[2:]
+                f = open("test.txt",'a')
+                t = open("test.txt",'r')
+                tm_list = t.read().split()
+                t.close()
+                for word in words:
+                    if word in tm_list:
+                        await app.send_message(message.channel,"목록에 존재합니다 " + word)
+                        continue
+                    f.write(word+" ")
+                f.close()
+            elif command == ('삭제'):
+                words = message.content.split()[2:]
+                t = open("test.txt",'r')
+                read_list = t.read().split()
+                t.close()
+                for word in words:
+                    if word in read_list:
+                        read_list.remove((word))
+                        continue
+                    await app.send_message(message.channel,"존재하지 않습니다 " + word)
+                    
+                f = open("test.txt",'w')
+                for word in read_list:
+                    f.write(word)
+                    f.write(" ")
+                f.close()
+
+
+
+'''
+ if message.content.startswith("!돌림판"):
+        command = message.content.split()[1]
+        maplt = ['알파','하틴','루인스','탐방','나캄','샤미','찰리','파이남','부캠','브라보','캄퐁','독스','라카위','몽나이','카오','하늘정원']
+        if command == ('골라줘'):
+            await app.send_message(message.channel,maplt.pop(rd.randint(0,len(maplt)-1)))
+            maplt = ['알파','하틴','루인스','탐방','나캄','샤미','찰리','파이남','부캠','브라보','캄퐁','독스','라카위','몽나이','카오','하늘정원']
+        elif command == '목록':
+            await app.send_message(message.channel,maplt)
+'''
+
     
 @app.event
 async def on_member_join(member):
